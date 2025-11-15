@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: dbt_postgres
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: dbt_user
+      POSTGRES_PASSWORD: dbt_password
+      POSTGRES_SCHEMA: public
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbt_user -d analytics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dbt_network
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.latest
+    container_name: dbt_container
+    volumes:
+      - .:/usr/app
+      - ./profiles.yml:/root/.dbt/profiles.yml
+    working_dir: /usr/app
+    ports:
+      - "8080:8080"
+    environment:
+      - DBT_PROFILES_DIR=/root/.dbt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c", "while true; do sleep 30; done"]
+    networks:
+      - dbt_network
+
+volumes:
+  postgres_data:
+
+networks:
+  dbt_network:
+    driver: bridge
