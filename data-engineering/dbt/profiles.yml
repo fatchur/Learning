@@ -1,12 +1,12 @@
 my_project:
-  target: dev
   outputs:
     dev:
-      type: postgres
-      host: postgres
-      user: dbt_user
-      password: dbt_password
-      port: 5432
       dbname: analytics
+      host: postgres
+      pass: dbt_password
+      port: 5432
       schema: public
-      threads: 1
+      threads: 2
+      type: postgres
+      user: dbt_user
+  target: dev
